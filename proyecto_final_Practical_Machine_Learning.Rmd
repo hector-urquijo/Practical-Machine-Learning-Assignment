@@ -1,0 +1,204 @@
+---
+title: "Practical Machine Learning Assignment"
+author: "Hector Urquijo"
+date: "13/5/2021"
+output: html_document
+---
+
+Fondo
+Con dispositivos como Jawbone Up, Nike FuelBand y Fitbit, ahora es posible recopilar una gran cantidad de datos sobre la actividad personal de forma relativamente económica. Este tipo de dispositivos son parte del auto movimiento cuantificado: un grupo de entusiastas que toman medidas sobre sí mismos con regularidad para mejorar su salud, para encontrar patrones en su comportamiento o porque son fanáticos de la tecnología. Una cosa que las personas hacen con regularidad es cuantificar la cantidad de una actividad en particular que hacen, pero rara vez cuantifican qué tan bien la hacen. En este proyecto, su objetivo será utilizar datos de acelerómetros en el cinturón, antebrazo, brazo y mancuerna de 6 participantes. Se les pidió que realizaran levantamientos con barra de forma correcta e incorrecta de 5 formas diferentes. Más información está disponible en el sitio web aquí: http://groupware.les.inf.puc-rio.br/har (consulte la sección sobre el conjunto de datos de ejercicios de levantamiento de pesas).
+
+Datos
+Los datos de entrenamiento para este proyecto están disponibles aquí:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv
+
+Los datos de la prueba están disponibles aquí:
+
+https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv
+
+Los datos de este proyecto provienen de esta fuente: http://groupware.les.inf.puc-rio.br/har . Si usa el documento que crea para esta clase para cualquier propósito, por favor cítelos, ya que han sido muy generosos al permitir que sus datos se usen para este tipo de tarea.
+
+Que debes enviar
+El objetivo de su proyecto es predecir la forma en que realizaron el ejercicio. Esta es la variable "clase" en el conjunto de entrenamiento. Puede usar cualquiera de las otras variables para predecir. Debe crear un informe que describa cómo construyó su modelo, cómo usó la validación cruzada, cuál cree que es el error esperado fuera de la muestra y por qué tomó las decisiones que tomó. También utilizará su modelo de predicción para predecir 20 casos de prueba diferentes.
+
+Porción de revisión por pares
+
+Su envío para la parte de Peer Review debe consistir en un enlace a un repositorio de Github con su rebaja de R y un archivo HTML compilado que describa su análisis. Restrinja el texto del escrito a <2000 palabras y el número de cifras a menos de 5. Será más fácil para los calificadores enviar un repositorio con una rama gh-pages para que la página HTML se pueda ver en línea ( y siempre quiere ponérselo fácil a los calificadores :-).
+
+Parte del cuestionario de predicción del proyecto del curso
+
+Aplique su algoritmo de aprendizaje automático a los 20 casos de prueba disponibles en los datos de prueba anteriores y envíe sus predicciones en el formato apropiado al Cuestionario de predicción del proyecto del curso para una calificación automatizada.
+
+Reproducibilidad
+Debido a problemas de seguridad con el intercambio de código R, sus compañeros de clase no ejecutarán su código durante la evaluación. Asegúrese de que si descargan el repositorio, podrán ver la versión HTML compilada de su análisis. 
+
+
+## TAREA PRACTICA DE APRENDIZAJE AUTOMATICO
+# Cargar librerias
+
+```{r, echo=FALSE}
+   library(lattice)
+   library(ggplot2)
+   library(caret)
+   library(dplyr)
+   library(tidyverse)
+   library(rpart)
+   library(rpart.plot)
+   library(randomForest)
+```
+
+# Descargar datos de la nube  
+
+```{r pressure, echo=FALSE}
+
+  # dataprueba <-   "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+  # testing <- read.csv(dataprueba)
+  # dataentre <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+  # training <- read.csv(dataentre)
+```
+
+#  Cargar datos localmente
+
+```{r }
+    training<- read.csv("pml-training.csv", na.strings=c("NA","#DIV/0!", ""))
+    testing <- read.csv("pml-testing.csv",  na.strings=c("NA","#DIV/0!", ""))
+```
+Data de entrenamiento cargada es de 19622 registros con 160 variable
+Data de prueba  cargada es de 20 registros con 160 varibles 
+
+# Limpiar el conjunto de datos
+
+Eliminar datos de columnas con todos los valores faltantes
+```{r }
+   training<-training[,colSums(is.na(training)) == 0]
+   testing <-testing[,colSums(is.na(testing)) == 0]
+```
+
+Data de entrenamiento despues de eliminar datos de los valores faltantes es de 19622 registros con 60 variable
+Data de prueba  despues de eliminar datos de valores faltantes es de 20 registros con 60 varibles 
+
+Eliminar las variables irrelevantes para el proyecto
+
+  #user_name, raw_timestamp_part_1, raw_timestamp_part_, 2 cvtd_timestamp, #new_window y num_window (columnas 1 a 7).
+
+```{r }
+   training   <-training[,-c(1:7)]
+   testing <-testing[,-c(1:7)]
+```
+Data de entrenamiento despues de eliminar variables irrelevantes es de 19622 registros con 53 variable
+Data de prueba  despues de eliminar variables irrelevantes es de 20 registros con 53 varibles 
+
+# Crear los conjuntos de entrenamiento y pruebas
+  Divido los datos de modo que el 70% del conjunto de datos sea de de entrenamiento  y el 30% restante en pruebas
+
+```{r }
+   set.seed(12321)
+   #datos entrenamiento
+   entrenamiento <- sample_frac(training, .70)  
+   dim(entrenamiento)
+
+   # datos de prueba
+   prueba <- setdiff(training, entrenamiento)  
+   dim(prueba)
+```
+
+# Construir Modelos de Prediccion
+
+### 1 modelado por arbol de decision
+
+```{r }
+   arbol <- rpart(classe~ . , method = "class", data = entrenamiento) #class variable cualitativa
+```
+
+# Estadisticas de resultados modelo arbol 
+
+```{r }
+  printcp(arbol)
+```
+
+Para el arbol de decision utiliza 17 variables 
+
+```{r }
+    plotcp(arbol)
+```
+
+Evolucion del error a medida que se incrementan los nodos el error va disminuyendo 
+
+# Prediccion con modelo de arbol
+```{r }
+    prediccion <- predict(arbol, type =  "class", newdata = prueba)
+```
+
+# Visualizacion de matrix de confusion con modelo arbol
+
+Verificar la coincidencia entre los valores de prueba y los valores predecidos (matriz de confusión).
+
+```{r }
+     prueba$classe = factor(prueba$classe)
+     confusionMatrix(prueba$classe, prediccion)
+```
+
+# Estadistica del modelo de prediccion con arbol
+
+Calcular el % de acierto modelo de prediccion arbol
+
+```{r }
+   sum(prediccion==prueba$classe)/length(prueba$classe)*100 #sumar los aciertos divido en el nro de predicciones
+```
+ 
+El modelo de predicción de arbol tiene una efectividad del 75.65%
+
+### 2 Modelo bosque aleatorio
+
+```{r }
+    entrenamiento$classe = factor(entrenamiento$classe)
+    arbol2 <- randomForest(classe ~. , data=entrenamiento, method="class")
+```
+
+# Predicción con modelo de bosque aleatorio
+
+```{r }  
+    prueba$classe = factor(prueba$classe)
+    prediccion2 <- predict(arbol2, prueba, type = "class")
+```
+
+# Predicción y evaluación del modelo
+
+Prueba entre datos de la prediccion y el conjunto de datos de prueba(matriz de confusion)
+
+
+```{r }
+    confusionMatrix(prediccion2, prueba$classe)
+```
+
+# precisión y error
+
+Cuando se prueban los datos de la prediccion y el conjunto de datos de prueba para verificar la validación cruzada, obtenemos una precisión del 99%, el modelo  se ajusta a la parte de entrenamiento de los datos, 
+
+
+# Estadistica del modelo de prediccion con modelo de bosque aleatorio
+
+Calcular el % de acierto modelo de bosque aleatorio
+
+```{r }
+     sum(prediccion2==prueba$classe)/length(prueba$classe)*100 
+```
+
+El modelo de predicción de bosque aleatorio tiene una efectividad del 99.5%
+
+## Modelo de prediccion a utilizar
+
+El porcentaje de acierto del modelo de arbol fue de 75.3%. y el de bosque aleatorio fue del 99.5 %
+por los resultados obtenidos el modelo que se debe utilizar es el de bosque aleatorio.
+
+## Resultado final
+
+Aplicando el modelo de prediccion del bosque aleatorio(prediccion2) al conjunto de datos de prueba 
+
+```{r }
+   predictfinal <- predict(arbol2, testing, type="class")
+   predictfinal
+``` 
+ 
+ 
