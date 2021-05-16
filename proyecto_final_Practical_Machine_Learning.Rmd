@@ -50,12 +50,11 @@ Debido a problemas de seguridad con el intercambio de código R, sus compañeros
 
 # Descargar datos de la nube  
 
-```{r pressure, echo=FALSE}
-
-  # dataprueba <-   "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
-  # testing <- read.csv(dataprueba)
-  # dataentre <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
-  # training <- read.csv(dataentre)
+```{r }
+     dataprueba <-   "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv"
+     testing <- read.csv(dataprueba)
+     dataentre <- "https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv"
+     training <- read.csv(dataentre)
 ```
 
 #  Cargar datos localmente
